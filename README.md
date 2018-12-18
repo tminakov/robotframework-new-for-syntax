@@ -9,13 +9,13 @@ This script can be used to transform source files from the "old style" to the ne
 ## Usage
 
  - Prerequisite - needs python version >= 3.6.
- - The target file(s) is modified **in-place** - so they must be in version control (preferable), or use the script on backup copies.
+ - The target file(s) is modified **in-place** - so it must be in version control (preferable), or use the script on backup copies.
 
 The script accepts a single argument - the target to be modified; the argument supports file names wildcard; samples:
 
-    change_for_rf.py directory/suite.robot     # modify a single file
-    change_for_rf.py directory/*.robot         # modify all files ending with robot
-    change_for_rf.py directory/**/*.robot      # modify all files ending with robot, in all sub-directories
+    change_rf_for.py directory/suite.robot     # modify a single file
+    change_rf_for.py directory/*.robot         # modify all files ending with robot
+    change_rf_for.py directory/**/*.robot      # modify all files ending with robot, in all sub-directories
 
 ## Modifications
 
@@ -32,6 +32,7 @@ A source with this content:
       :FOR  ${value}    IN    @{itterable}
       \    Run Keywords        Log     The value is ${value}
              ...         AND   Log     2nd keyword
+
 , will be transformed to:
 
       No Operation
@@ -55,8 +56,8 @@ The script will rewrite *only* the files where it detects a for loop, printing o
     INFO: suites/file_y.robot was not modified.
 
 ### Known Limitations
-A line that is after a `:FOR` and doesn't start with `\`, `...` or `#` is considered outside of the loop block, and this is the place where the `END` is added to close the loop.
-This means that blocks that have empty lines (or start with any other character but these 3) will be "broken-up" in the middle - and any lines that are originally in the block will now be left out. It's easier to explain with a sample; on this old-style loop:
+A line that is after a `:FOR` and doesn't start with `\`, `...` or `#` is considered outside of the loop block, and this is the place where the `END` is added to close it.
+This means that blocks having empty lines (or lines starting with any other character but these 3) will be "broken-up" in the middle - and any lines that were originally in the block will now be left out. It's easier to explain with a sample; on this old-style loop:
 
       :FOR  ${animal}  IN  cat  dog
       \    Log ${animal}
@@ -73,8 +74,8 @@ This means that blocks that have empty lines (or start with any other character 
       
       \    Log  2nd keyword
 
-which is obviously an incorrect syntax.  
-The script prints to the console a warning for all such lines - so watch its output, and correct the issue manually:
+, which is obviously an incorrect syntax.  
+The script prints to the console a warning for all such lines - so monitor its output, and correct the issues manually:
 
     WARN: 	suites/file_x.robot:7 has an orphaned "\" 
     INFO: suites/file_x.robot was modified.
