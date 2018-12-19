@@ -25,13 +25,26 @@ A source with this content:
       :FOR  ${animal}  IN  cat  dog
       \    Log ${animal}
       \    Log  2nd keyword
+      
       Log    Outside the loop
-      :FOR  ${counter}  IN RANGE    1    5
-      #   a comment in the loop
-      \    Log   It's ${counter}
-      :FOR  ${value}    IN    @{itterable}
+      
+          :FOR  ${counter}  IN RANGE    1    5      # custom block indent
+            #   a comment in the loop
+                \    Log   It's ${counter}
+      :FOR  ${value}    IN    @{itterable}      # two loops with no lines b/n them
       \    Run Keywords        Log     The value is ${value}
              ...         AND   Log     2nd keyword
+      Log   this is a line just after the loop, no lines b/n it and the FOR block
+      
+      :FOR  ${animal}  IN  cat  dog
+      \    Log ${animal}
+           # there is an empty line before the next in-block line
+           # e.g. a "broken-up" block
+      
+      \    Log  2nd keyword
+      \    Log  3rd keyword
+      
+      ${answer}=        Evaluate  42
 , will be transformed to:
 
       No Operation
@@ -39,42 +52,40 @@ A source with this content:
            Log ${animal}
            Log  2nd keyword
       END
+      
       Log    Outside the loop
-      FOR  ${counter}  IN RANGE    1    5
-      #   a comment in the loop
-           Log   It's ${counter}
-      END
-      FOR  ${value}    IN    @{itterable}
+      
+          FOR  ${counter}  IN RANGE    1    5      # custom block indent
+            #   a comment in the loop
+                     Log   It's ${counter}
+          END
+      FOR  ${value}    IN    @{itterable}      # two loops with no lines b/n them
            Run Keywords        Log     The value is ${value}
              ...         AND   Log     2nd keyword
       END
+      Log   this is a line just after the loop, no lines b/n it and the FOR block
+      
+      FOR  ${animal}  IN  cat  dog
+           Log ${animal}
+           # there is an empty line before the next in-block line
+           # e.g. a "broken-up" block
+      
+           Log  2nd keyword
+           Log  3rd keyword
+      END
+      
+      ${answer}=        Evaluate  42
 
 The script will rewrite *only* the files where it detects a for loop, printing on the console the outcome for each analyzed file:
 
     INFO: suites/file_x.robot was modified.
     INFO: suites/file_y.robot was not modified.
 
-### Known Limitations
-A line that is after a `:FOR` and doesn't start with `\`, `...` or `#` is considered outside of the loop block, and this is the place where the `END` is added to close the loop.
-This means that blocks that have empty lines (or start with any other character but these 3) will be "broken-up" in the middle - and any lines that are originally in the block will now be left out. It's easier to explain with a sample; on this old-style loop:
+### Other
+A line that is after a `:FOR` and doesn't start with `\`, `...` or `#` (or is not an empty line) is considered outside of the loop block, and this is the place where the `END` is added to close the loop.
 
-      :FOR  ${animal}  IN  cat  dog
-      \    Log ${animal}
-           # there is an empty line before the next in-block line
-      
-      \    Log  2nd keyword
-
-, the result will be a "broken-up" loop, due to the empty line:
-
-      FOR  ${animal}  IN  cat  dog
-           Log ${animal}
-           # there is an empty line before the next in-block line
-      END
-      
-      \    Log  2nd keyword
-
-which is obviously an incorrect syntax.  
-The script prints to the console a warning for all such lines - so watch its output, and correct the issue manually:
+The script prints to the console a warning for all lines that start with `\`, but are not in a for block.   
+A possible reason for that to happen is because of a bug in the script ?\\\_(?)_/? - so watch its output, and correct such issues manually:
 
     WARN: 	suites/file_x.robot:7 has an orphaned "\" 
     INFO: suites/file_x.robot was modified.

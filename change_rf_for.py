@@ -5,29 +5,48 @@ import glob
 
 
 def format_file(name):
-    file_changed = False
+
+    def next_lines_in_block(lst):
+        """ Returns True if the initial list members are :FOR block members. """
+        for _line in lst:
+            _line = _line.strip()
+            if _line.startswith('\\'):
+                return True
+            elif _line == '' or _line.startswith('#') or _line.startswith('...'):
+                continue
+            else:
+                return False
+        return False
+
     in_block = False
 
-    with open(name, mode='r', newline='') as file:
-        modified_lines = []
-        line_ending = None
+    with open(name, mode='r', newline='') as fp:
+        content = fp.readlines()
+        line_ending = '\r\n' if '\r\n' in content[0] else '\n'    # no special treatment for Mac ;)
         in_block = False
 
-        for line in file:
-            if line_ending is None:
-                line_ending = '\r\n' if '\r\n' in line else '\n'    # no special treatment for Mac ;)
+        added_lines = 0
 
+        for i, line in enumerate(content):
             stripped = line.lstrip().lower()
-            if stripped.startswith(':for'):
-                if in_block:    # special handling for two :FOR cycles with no delimiter (lines) b/n them
-                    closing_line = ' ' * for_position + 'END' + line_ending
-                    modified_lines.append(closing_line)
+            if stripped.startswith(':for'):     # start of a new loop block
+                if in_block:
+                    # special handling for two :FOR cycles with no delimiter (lines) b/n them - add the closing keyword
+                    # the previous loop
+                    content[i] = ' ' * for_position + 'END' + line_ending + content[i]
+                    line = content[i]
+                    added_lines += 1
                     
                 for_position = line.find(':')
-                line = line[0:for_position] + line[for_position+1:]
-                file_changed = True
+                line = line[0:for_position] + line[for_position + 1:]
+
+                if '\n' in line[:for_position]:
+                    # when the previous "if in_block" appended the closing END, it changed the position of
+                    # this line's :FOR in the newly generated line - accommodate for that
+                    for_position -= line.index('\n') + 1
+
+                content[i] = line
                 in_block = True
-                modified_lines.append(line)
                 continue
 
             has_slash = stripped.startswith('\\')
@@ -36,23 +55,24 @@ def format_file(name):
                 if has_slash:
                     pos = line.find('\\')
                     # replace the \ with an whitespace - this will preserve the indentation
-                    line = line[:pos] + ' ' + line[pos+1:]
-                elif stripped.startswith('...') or stripped.startswith('#'):
+                    content[i] = line[:pos] + ' ' + line[pos+1:]
+                elif stripped.startswith('...') or stripped.startswith('#') \
+                        or next_lines_in_block(content[i:]):
                     pass
                 else:       # presumably a line not in the current FOR block? close the block
                     in_block = False
                     # add the new closing keyword, as a new line
-                    closing_line = ' '*for_position + 'END' + line_ending
-                    modified_lines.append(closing_line)
-            elif has_slash:
-                print(f'WARN: \t{name}:{len(modified_lines) + 1} has an orphaned "\\"')
-                
-            modified_lines.append(line)
+                    content[i] = ' '*for_position + 'END' + line_ending + content[i]
+                    added_lines += 1
 
-    if file_changed:
+            elif has_slash:
+                print(f'WARN: \t{name}:{i + added_lines + 1} has an orphaned "\\"')
+
+    # the file has been changed only if there's a closing added (the END) - write it to the FS only in this case
+    if added_lines > 0:
         with open(name, mode='w', newline='') as file:
-            file.writelines(modified_lines)
-    return file_changed
+            file.writelines(content)
+    return added_lines > 0
 
 
 if __name__ == '__main__':
