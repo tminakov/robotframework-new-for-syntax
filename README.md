@@ -9,13 +9,13 @@ This script can be used to transform source files from the "old style" to the ne
 ## Usage
 
  - Prerequisite - needs python version >= 3.6.
- - The target file(s) is modified **in-place** - so they must be in version control (preferable), or use the script on backup copies.
+ - The target file(s) is modified **in-place** - so it must be in version control (preferable), or use the script on backup copies.
 
 The script accepts a single argument - the target to be modified; the argument supports file names wildcard; samples:
 
-    change_for_rf.py directory/suite.robot     # modify a single file
-    change_for_rf.py directory/*.robot         # modify all files ending with robot
-    change_for_rf.py directory/**/*.robot      # modify all files ending with robot, in all sub-directories
+    change_rf_for.py directory/suite.robot     # modify a single file
+    change_rf_for.py directory/*.robot         # modify all files ending with robot
+    change_rf_for.py directory/**/*.robot      # modify all files ending with robot, in all sub-directories
 
 ## Modifications
 
@@ -85,7 +85,7 @@ The script will rewrite *only* the files where it detects a for loop, printing o
 A line that is after a `:FOR` and doesn't start with `\`, `...` or `#` (or is not an empty line) is considered outside of the loop block, and this is the place where the `END` is added to close the loop.
 
 The script prints to the console a warning for all lines that start with `\`, but are not in a for block.   
-A possible reason for that to happen is because of a bug in the script ?\\\_(?)_/? - so watch its output, and correct such issues manually:
+A possible reason for that to happen is because of a bug in the script ?\\\_(?)_/? - so monitor its output, and correct such issues manually:
 
     WARN: 	suites/file_x.robot:7 has an orphaned "\" 
     INFO: suites/file_x.robot was modified.
