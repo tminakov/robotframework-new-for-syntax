@@ -20,7 +20,7 @@ def format_file(name):
 
     in_block = False
 
-    with open(name, mode='r', newline='') as fp:
+    with open(name, mode='r', newline='', encoding='utf8') as fp:
         content = fp.readlines()
         line_ending = '\r\n' if '\r\n' in content[0] else '\n'    # no special treatment for Mac ;)
         in_block = False
@@ -70,7 +70,7 @@ def format_file(name):
 
     # the file has been changed only if there's a closing added (the END) - write it to the FS only in this case
     if added_lines > 0:
-        with open(name, mode='w', newline='') as file:
+        with open(name, mode='w', newline='', encoding='utf8') as file:
             file.writelines(content)
     return added_lines > 0
 
