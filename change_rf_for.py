@@ -18,8 +18,10 @@ def format_file(name):
                 return False
         return False
 
-    in_block = False
-
+    in_block = False     # True if the currently processed line is a part of an open :FOR block
+    for_position = None  # the position of the ":FOR" string in the current line, as it needs to be replaced (with "FOR")
+    added_lines = 0      # counter how many lines were added, if == 0 - the file was not modified
+    
     with open(name, mode='r', newline='', encoding='utf8') as fp:
         content = fp.readlines()
 
@@ -28,10 +30,6 @@ def format_file(name):
             return False
 
         line_ending = '\r\n' if '\r\n' in content[0] else '\n'    # no special treatment for Mac ;)
-
-        in_block = False
-        for_position = None
-        added_lines = 0
 
         # Append newline if file doesn't end with \n
         if '\n' not in content[-1]:
