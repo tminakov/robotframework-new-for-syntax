@@ -34,8 +34,8 @@ def format_file(name):
         added_lines = 0
 
         # Append newline if file doesn't end with \n
-        if '\n' not in content[len(content) - 1]:
-            content[len(content) - 1] += line_ending
+        if '\n' not in content[-1]:
+            content[-1] += line_ending
             content.append(line_ending)
 
         for i, line in enumerate(content):
