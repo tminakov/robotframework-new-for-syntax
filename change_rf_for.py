@@ -22,10 +22,21 @@ def format_file(name):
 
     with open(name, mode='r', newline='', encoding='utf8') as fp:
         content = fp.readlines()
-        line_ending = '\r\n' if '\r\n' in content[0] else '\n'    # no special treatment for Mac ;)
-        in_block = False
 
+        # skip empty files
+        if not content:
+            return False
+
+        line_ending = '\r\n' if '\r\n' in content[0] else '\n'    # no special treatment for Mac ;)
+
+        in_block = False
+        for_position = None
         added_lines = 0
+
+        # Append newline if file doesn't end with \n
+        if '\n' not in content[-1]:
+            content[-1] += line_ending
+            content.append(line_ending)
 
         for i, line in enumerate(content):
             stripped = line.lstrip().lower()
@@ -36,7 +47,7 @@ def format_file(name):
                     content[i] = ' ' * for_position + 'END' + line_ending + content[i]
                     line = content[i]
                     added_lines += 1
-                    
+
                 for_position = line.find(':')
                 line = line[0:for_position] + line[for_position + 1:]
 
@@ -55,14 +66,14 @@ def format_file(name):
                 if has_slash:
                     pos = line.find('\\')
                     # replace the \ with an whitespace - this will preserve the indentation
-                    content[i] = line[:pos] + ' ' + line[pos+1:]
+                    content[i] = line[:pos] + ' ' + line[pos + 1:]
                 elif stripped.startswith('...') or stripped.startswith('#') \
                         or next_lines_in_block(content[i:]):
                     pass
                 else:       # presumably a line not in the current FOR block? close the block
                     in_block = False
                     # add the new closing keyword, as a new line
-                    content[i] = ' '*for_position + 'END' + line_ending + content[i]
+                    content[i] = ' ' * for_position + 'END' + line_ending + content[i]
                     added_lines += 1
 
             elif has_slash:
@@ -79,9 +90,9 @@ if __name__ == '__main__':
     if len(sys.argv) != 2:
         __, script_name = os.path.split(sys.argv[0])
         print('Pass the target file name as argument; supports glob patterns:')
-        print(f'\t{script_name} directory/suite.robot     - modify a single file')
-        print(f'\t{script_name} directory/*.robot         - modify all files ending with robot')
-        print(f'\t{script_name} directory/**/*.robot      - modify all files ending with robot, in all sub-directories')
+        print(f'\t{script_name} directory/suite.robot       - modify a single file')
+        print(f'\t{script_name} \'directory/*.robot\'         - modify all files ending with robot')
+        print(f'\t{script_name} \'directory/**/*.robot\'      - modify all files ending with robot, in all sub-directories')
         print('The file(s) is modified in-place.')
         exit(0)
 
