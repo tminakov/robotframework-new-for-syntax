@@ -35,6 +35,8 @@ def format_file(name):
         if '\n' not in content[-1]:
             content[-1] += line_ending
             content.append(line_ending)
+        elif content[-1].strip():
+            content.append(line_ending)
 
         for i, line in enumerate(content):
             stripped = line.lstrip().lower()
